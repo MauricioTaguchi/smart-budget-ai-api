@@ -1,0 +1,12 @@
+target/
+data/
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+.env
+*.log
+.DS_Store
+resposta.mp3

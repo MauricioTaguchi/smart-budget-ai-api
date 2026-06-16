@@ -1,0 +1,26 @@
+GET http://localhost:8080/actuator/health
+
+###
+POST http://localhost:8080/api/assistant/text
+Content-Type: application/json
+
+{
+  "message": "Registre uma despesa de 89,90 com supermercado na categoria alimentação"
+}
+
+###
+POST http://localhost:8080/api/assistant/text
+Content-Type: application/json
+
+{
+  "message": "Qual é o meu saldo atual?"
+}
+
+###
+GET http://localhost:8080/api/transactions
+
+###
+GET http://localhost:8080/api/transactions/summary
+
+###
+GET http://localhost:8080/api/audits
