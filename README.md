@@ -1,37 +1,41 @@
-# Smart Budget AI API
+API inteligente de orçamento financeiro desenvolvida com Java 17, Spring Boot e Spring AI.
+A aplicação interpreta comandos em linguagem natural, registra transações financeiras, consulta saldo, lista movimentações, remove registros e pode responder em texto ou áudio.
 
-API financeira inteligente desenvolvida em **Java 17**, **Spring Boot** e
-**Spring AI**. A aplicação recebe comandos em linguagem natural, identifica
-a intenção da pessoa usuária, executa operações financeiras reais e, no
-perfil OpenAI, aceita áudio e devolve uma resposta em MP3.
+Este projeto demonstra o uso de IA aplicada em uma API real, combinando backend Java, persistência de dados, validação, arquitetura em camadas, Tool Calling e integração com recursos de voz.
 
-## Objetivo do projeto
+Objetivo do projeto
 
-O fluxo principal é:
+O objetivo do Smart Budget AI API é simular um assistente financeiro capaz de entender comandos como:
 
-1. Receber um comando em texto ou áudio.
-2. Transcrever o áudio para texto.
-3. Interpretar a intenção com um modelo de IA.
-4. Acionar casos de uso reais por meio de Tool Calling.
-5. Criar, listar, excluir ou resumir transações.
-6. Persistir as informações no banco.
-7. Registrar uma auditoria da interação.
-8. Gerar uma resposta em texto ou áudio.
+“Registre uma despesa de R$ 89,90 com supermercado na categoria alimentação.”
 
-## Melhoria implementada
+A partir desse comando, a aplicação interpreta a intenção do usuário, executa a operação financeira correspondente, salva os dados no banco e retorna uma resposta estruturada.
 
-- auditoria das interações com a IA;
-- validação de valores e campos obrigatórios;
-- resumo com receitas, despesas e saldo;
-- exclusão de transações;
-- tratamento global de erros;
-- testes unitários;
-- perfil `demo` para testes sem chave de IA;
-- persistência local com H2 em arquivo.
-
-## Arquitetura
-
-```text
+Funcionalidades
+Processamento de comandos financeiros em texto
+Processamento de comandos por áudio
+Registro de receitas e despesas
+Consulta de saldo
+Listagem de transações
+Exclusão de transações
+Resumo financeiro com receitas, despesas e saldo
+Auditoria das interações com IA
+Validação de campos obrigatórios
+Tratamento global de erros
+Perfil demo para testes sem chave de IA
+Testes unitários
+Tecnologias utilizadas
+Java 17
+Spring Boot
+Spring AI
+Spring Web
+Spring Data JPA
+Bean Validation
+OpenAI API
+H2 Database
+Maven
+JUnit 5
+Arquitetura do projeto
 src/main/java/com/mauriciotaguchi/smartbudget
 ├── domain
 │   ├── model
@@ -43,122 +47,87 @@ src/main/java/com/mauriciotaguchi/smartbudget
     ├── ai
     ├── persistence
     └── web
-```
 
-## Tecnologias
+A estrutura separa responsabilidades em camadas, facilitando manutenção, testes e evolução do projeto.
 
-- Java 17
-- Spring Boot 4
-- Spring AI 2
-- Spring Web
-- Spring Data JPA
-- Bean Validation
-- OpenAI Chat, Speech-to-Text e Text-to-Speech
-- H2 Database
-- Maven Wrapper
-- JUnit 5
-
-## Executar no Windows sem chave de IA
-
-```bat
+Como executar o projeto
+Executar em modo demo, sem chave de IA
 .\mvnw.cmd spring-boot:run
-```
 
-A API ficará em:
+A API ficará disponível em:
 
-```text
 http://localhost:8080
-```
+Executar com OpenAI
 
-### Registrar uma despesa por texto
+Configure a variável de ambiente:
 
-```bat
-curl -X POST http://localhost:8080/api/assistant/text ^
-  -H "Content-Type: application/json" ^
-  -d "{\"message\":\"Registre uma despesa de 89,90 com supermercado na categoria alimentação\"}"
-```
-
-### Registrar uma receita
-
-```bat
-curl -X POST http://localhost:8080/api/assistant/text ^
-  -H "Content-Type: application/json" ^
-  -d "{\"message\":\"Recebi uma receita de 3500 de salário na categoria trabalho\"}"
-```
-
-### Consultar saldo
-
-```bat
-curl -X POST http://localhost:8080/api/assistant/text ^
-  -H "Content-Type: application/json" ^
-  -d "{\"message\":\"Qual é o meu saldo atual?\"}"
-```
-
-## Executar com OpenAI e áudio
-
-```bat
 set OPENAI_API_KEY=sua_chave_aqui
 set SPRING_PROFILES_ACTIVE=openai
 .\mvnw.cmd spring-boot:run
-```
-
-Enviar áudio:
-
-```bat
+Exemplos de uso
+Registrar uma despesa
+curl -X POST http://localhost:8080/api/assistant/text ^
+  -H "Content-Type: application/json" ^
+  -d "{\"message\":\"Registre uma despesa de 89,90 com supermercado na categoria alimentação\"}"
+Registrar uma receita
+curl -X POST http://localhost:8080/api/assistant/text ^
+  -H "Content-Type: application/json" ^
+  -d "{\"message\":\"Recebi uma receita de 3500 de salário na categoria trabalho\"}"
+Consultar saldo
+curl -X POST http://localhost:8080/api/assistant/text ^
+  -H "Content-Type: application/json" ^
+  -d "{\"message\":\"Qual é o meu saldo atual?\"}"
+Enviar áudio
 curl -X POST http://localhost:8080/api/assistant/voice ^
   -F "audio=@comando.mp3" ^
   --output resposta.mp3
-```
+Endpoints principais
+Método	Endpoint	Descrição
+POST	/api/assistant/text	Processa comando em texto
+POST	/api/assistant/voice	Processa áudio e retorna MP3
+POST	/api/transactions	Cria uma transação
+GET	/api/transactions	Lista transações
+GET	/api/transactions/summary	Consulta resumo financeiro
+DELETE	/api/transactions/{id}	Exclui uma transação
+GET	/api/audits	Consulta auditoria
+GET	/actuator/health	Verifica status da aplicação
+Banco de dados H2
 
-## Endpoints
+Acesse:
 
-| Método | Endpoint | Função |
-|---|---|---|
-| POST | `/api/assistant/text` | Processar comando em texto |
-| POST | `/api/assistant/voice` | Processar áudio e retornar MP3 |
-| POST | `/api/transactions` | Criar transação |
-| GET | `/api/transactions` | Listar transações |
-| GET | `/api/transactions/summary` | Consultar resumo |
-| DELETE | `/api/transactions/{id}` | Excluir transação |
-| GET | `/api/audits` | Consultar auditoria |
-| GET | `/actuator/health` | Verificar a aplicação |
-
-## Banco H2
-
-```text
 http://localhost:8080/h2-console
+
+Configuração:
+
 JDBC URL: jdbc:h2:file:./data/smartbudget
 User Name: sa
 Password:
-```
+Testes
 
-## Testes
+Para executar os testes:
 
-```bat
-.\mvnw.cmd test
-```
-
-## O que aprendi
-
-Aprendi a integrar Spring AI a uma aplicação Java real, utilizando ChatClient,
-Tool Calling, transcrição de áudio, síntese de voz, persistência, validação,
-arquitetura em camadas, auditoria e testes.
-
-## Autor
-
-**Maurício Ryo Toita Taguchi**
-
-GitHub: `MauricioTaguchi`
-
-
-## Solução de problemas nos testes
-
-Os testes usam o perfil `test`, com banco H2 em memória e modelos externos
-desativados. Execute:
-
-```bat
 .\mvnw.cmd clean test
-```
 
-Se uma execução anterior estiver aberta, encerre-a com `Ctrl + C` antes de
-rodar os testes.
+Os testes utilizam perfil específico, banco H2 em memória e modelos externos desativados.
+
+O que este projeto demonstra
+Desenvolvimento de APIs REST com Java e Spring Boot
+Integração de IA generativa com backend
+Uso de Tool Calling para executar ações reais
+Processamento de texto e áudio
+Persistência com JPA e H2
+Validação de dados
+Arquitetura em camadas
+Testes unitários
+Organização de projeto para portfólio profissional
+Melhorias futuras
+Adicionar autenticação com JWT
+Criar documentação com Swagger/OpenAPI
+Adicionar integração com banco PostgreSQL
+Criar dashboard financeiro
+Implementar categorias personalizadas
+Criar deploy em nuvem
+Autor
+
+Maurício Ryo Toita Taguchi
+GitHub: MauricioTaguchi
