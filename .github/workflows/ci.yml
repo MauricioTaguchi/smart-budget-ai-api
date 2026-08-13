@@ -19,7 +19,7 @@ jobs:
           java-version: "17"
           cache: maven
       - run: mvn --batch-mode verify
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: jacoco-report
