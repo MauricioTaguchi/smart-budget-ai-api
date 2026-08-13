@@ -8,9 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 public class AiAuditService {
+
+    private static final Pattern EMAIL = Pattern.compile("[\\w.+-]+@[\\w.-]+\\.[A-Za-z]{2,}");
+    private static final Pattern CARD = Pattern.compile("(?<!\\d)(?:\\d[ -]*?){13,19}(?!\\d)");
 
     private final AiInteractionJpaRepository repository;
     private final String mode;
@@ -61,7 +65,9 @@ public class AiAuditService {
         if (value == null) {
             return "";
         }
-        return value.length() > 1900 ? value.substring(0, 1900) : value;
+        String redacted = EMAIL.matcher(value).replaceAll("[EMAIL_REDACTED]");
+        redacted = CARD.matcher(redacted).replaceAll("[PAYMENT_DATA_REDACTED]");
+        return redacted.length() > 1900 ? redacted.substring(0, 1900) : redacted;
     }
 
     public record AiAuditView(

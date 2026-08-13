@@ -1,6 +1,8 @@
 package com.mauriciotaguchi.smartbudget.infrastructure.web;
 
 import com.mauriciotaguchi.smartbudget.infrastructure.ai.AiProviderUnavailableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,6 +15,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequest(
@@ -54,9 +58,10 @@ public class ApiExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleUnexpected(
             Exception exception
     ) {
+        LOGGER.error("Erro inesperado ao processar requisição", exception);
         return response(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Ocorreu um erro inesperado: " + exception.getMessage()
+                "Ocorreu um erro inesperado. Use o X-Request-ID para suporte."
         );
     }
 

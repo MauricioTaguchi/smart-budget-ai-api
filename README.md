@@ -1,184 +1,99 @@
 # Smart Budget AI API
 
-API inteligente de orçamento financeiro desenvolvida com **Java 17, Spring Boot e Spring AI**.
+Backend financeiro em Java que transforma comandos em português em operações estruturadas, com modo local determinístico e integração opcional com OpenAI para texto e voz.
 
-A aplicação interpreta comandos em linguagem natural, registra transações financeiras, consulta saldo, lista movimentações, remove registros e pode responder em texto ou áudio.
+[![CI](https://github.com/MauricioTaguchi/smart-budget-ai-api/actions/workflows/ci.yml/badge.svg)](https://github.com/MauricioTaguchi/smart-budget-ai-api/actions/workflows/ci.yml)
 
-Este projeto demonstra o uso de **IA aplicada em uma API real**, combinando backend Java, persistência de dados, validação, arquitetura em camadas, Tool Calling e integração com recursos de voz.
+## Diferenciais técnicos
 
-## Objetivo do projeto
+- arquitetura em domínio, aplicação e infraestrutura;
+- Tool Calling com confirmação explícita antes de criar ou excluir dados;
+- bloqueio de padrões comuns de prompt injection e limite de entrada;
+- auditoria com mascaramento de e-mail e dados de pagamento;
+- API protegida por `X-API-Key` no perfil de produção;
+- rastreamento por `X-Request-ID`, health probes e desligamento gracioso;
+- H2 para desenvolvimento e PostgreSQL com Docker Compose para produção;
+- testes unitários, relatório JaCoCo, CI e Dependabot;
+- nenhuma chave é armazenada no repositório.
 
-O objetivo do Smart Budget AI API é simular um assistente financeiro capaz de entender comandos como:
+## Fluxo seguro da IA
 
-> “Registre uma despesa de R$ 89,90 com supermercado na categoria alimentação.”
-
-A partir desse comando, a aplicação interpreta a intenção do usuário, executa a operação financeira correspondente, salva os dados no banco e retorna uma resposta estruturada.
-
-## Funcionalidades
-
-- Processamento de comandos financeiros em texto
-- Processamento de comandos por áudio
-- Registro de receitas e despesas
-- Consulta de saldo
-- Listagem de transações
-- Exclusão de transações
-- Resumo financeiro com receitas, despesas e saldo
-- Auditoria das interações com IA
-- Validação de campos obrigatórios
-- Tratamento global de erros
-- Perfil demo para testes sem chave de IA
-- Testes unitários
-
-## Tecnologias utilizadas
-
-- Java 17
-- Spring Boot
-- Spring AI
-- Spring Web
-- Spring Data JPA
-- Bean Validation
-- OpenAI API
-- H2 Database
-- Maven
-- JUnit 5
-
-## Arquitetura do projeto
-
-```text
-src/main/java/com/mauriciotaguchi/smartbudget
-├── domain
-│   ├── model
-│   └── repository
-├── application
-│   ├── dto
-│   └── usecase
-└── infrastructure
-    ├── ai
-    ├── persistence
-    └── web
+```mermaid
+flowchart LR
+    A[Comando] --> B[Política de entrada]
+    B --> C{Consulta ou mutação?}
+    C -->|Consulta| D[Tool de leitura]
+    C -->|Mutação| E{CONFIRMAR presente?}
+    E -->|Não| F[Prévia sem salvar]
+    E -->|Sim| G[Tool de escrita]
+    D --> H[Resposta + auditoria redigida]
+    G --> H
 ```
 
-A estrutura separa responsabilidades em camadas, facilitando manutenção, testes e evolução do projeto.
+## Executar sem IA externa
 
-## Como executar o projeto
+Requer Java 17.
 
-### Executar em modo demo, sem chave de IA
-
-```bash
+```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-A API ficará disponível em:
+A API inicia em `http://localhost:8080`. O modo demo entende consultas e comandos básicos sem consumir créditos.
+
+```powershell
+curl.exe -X POST http://localhost:8080/api/assistant/text `
+  -H "Content-Type: application/json" `
+  -d '{"message":"Confirmar despesa de 89,90 com mercado na categoria alimentação"}'
+```
+
+Sem a palavra `CONFIRMAR`, o assistente apresenta a operação, mas não grava.
+
+## Executar com OpenAI com segurança
+
+Crie `.env.local` somente na sua máquina ou configure as variáveis no cofre do provedor:
 
 ```text
-http://localhost:8080
+OPENAI_API_KEY=valor_privado
+SPRING_PROFILES_ACTIVE=openai
 ```
 
-### Executar com OpenAI
+O `.gitignore` impede o versionamento de `.env.local`. Nunca coloque uma chave real em `application.properties`, `.env.example`, README, commit ou screenshot.
 
-Configure a variável de ambiente:
+## Produção com PostgreSQL
 
-```bash
-set OPENAI_API_KEY=sua_chave_aqui
-set SPRING_PROFILES_ACTIVE=openai
-.\mvnw.cmd spring-boot:run
-```
+1. Copie `.env.example` para `.env` e preencha localmente.
+2. Gere o pacote: `.\mvnw.cmd package`.
+3. Inicie: `docker compose up --build`.
 
-## Exemplos de uso
+No perfil `prod`, todas as rotas `/api/**` exigem o cabeçalho `X-API-Key`; `/actuator/health` continua disponível para probes.
 
-### Registrar uma despesa
+## Endpoints
 
-```bash
-curl -X POST http://localhost:8080/api/assistant/text ^
-  -H "Content-Type: application/json" ^
-  -d "{\"message\":\"Registre uma despesa de 89,90 com supermercado na categoria alimentação\"}"
-```
-
-### Registrar uma receita
-
-```bash
-curl -X POST http://localhost:8080/api/assistant/text ^
-  -H "Content-Type: application/json" ^
-  -d "{\"message\":\"Recebi uma receita de 3500 de salário na categoria trabalho\"}"
-```
-
-### Consultar saldo
-
-```bash
-curl -X POST http://localhost:8080/api/assistant/text ^
-  -H "Content-Type: application/json" ^
-  -d "{\"message\":\"Qual é o meu saldo atual?\"}"
-```
-
-### Enviar áudio
-
-```bash
-curl -X POST http://localhost:8080/api/assistant/voice ^
-  -F "audio=@comando.mp3" ^
-  --output resposta.mp3
-```
-
-## Endpoints principais
-
-| Método | Endpoint | Descrição |
+| Método | Endpoint | Função |
 |---|---|---|
-| POST | `/api/assistant/text` | Processa comando em texto |
-| POST | `/api/assistant/voice` | Processa áudio e retorna MP3 |
-| POST | `/api/transactions` | Cria uma transação |
-| GET | `/api/transactions` | Lista transações |
-| GET | `/api/transactions/summary` | Consulta resumo financeiro |
-| DELETE | `/api/transactions/{id}` | Exclui uma transação |
-| GET | `/api/audits` | Consulta auditoria |
-| GET | `/actuator/health` | Verifica status da aplicação |
-
-## Banco de dados H2
-
-Acesse:
-
-```text
-http://localhost:8080/h2-console
-```
-
-Configuração:
-
-```text
-JDBC URL: jdbc:h2:file:./data/smartbudget
-User Name: sa
-Password:
-```
+| POST | `/api/assistant/text` | interpreta comando de texto |
+| POST | `/api/assistant/voice` | transcreve comando e devolve MP3 |
+| POST | `/api/transactions` | cria transação estruturada |
+| GET | `/api/transactions` | lista transações |
+| GET | `/api/transactions/summary` | calcula receitas, despesas e saldo |
+| DELETE | `/api/transactions/{id}` | remove uma transação |
+| GET | `/api/audits` | lista as 100 interações mais recentes |
+| GET | `/actuator/health` | disponibilidade e probes |
 
 ## Testes
 
-Para executar os testes:
-
-```bash
-.\mvnw.cmd clean test
+```powershell
+.\mvnw.cmd verify
 ```
 
-Os testes utilizam perfil específico, banco H2 em memória e modelos externos desativados.
+Os testes externos usam o perfil `test`, H2 em memória e modelos de IA desativados. A suíte inclui casos de domínio, resumo financeiro, política anti-injection e bloqueio de mutações sem confirmação.
 
-## O que este projeto demonstra
+## Limites atuais
 
-- Desenvolvimento de APIs REST com Java e Spring Boot
-- Integração de IA generativa com backend
-- Uso de Tool Calling para executar ações reais
-- Processamento de texto e áudio
-- Persistência com JPA e H2
-- Validação de dados
-- Arquitetura em camadas
-- Testes unitários
-- Organização de projeto para portfólio profissional
-
-## Melhorias futuras
-
-- Adicionar autenticação com JWT
-- Criar documentação com Swagger/OpenAPI
-- Adicionar integração com banco PostgreSQL
-- Criar dashboard financeiro
-- Implementar categorias personalizadas
-- Criar deploy em nuvem
+- O mecanismo `X-API-Key` protege uma implantação individual; um SaaS multiusuário exigiria OAuth2/JWT e isolamento por usuário.
+- O perfil demo usa interpretação por regras e não substitui a compreensão do modelo.
+- Antes de uma implantação regulada, seriam necessários migrações versionadas, retenção formal de auditoria e análise de privacidade/LGPD.
 
 ## Autor
 
-Maurício Ryo Toita Taguchi  
-GitHub: [MauricioTaguchi](https://github.com/MauricioTaguchi)
+**Mauricio Taguchi** · [LinkedIn](https://www.linkedin.com/in/mauriciotaguchi/) · [GitHub](https://github.com/MauricioTaguchi)

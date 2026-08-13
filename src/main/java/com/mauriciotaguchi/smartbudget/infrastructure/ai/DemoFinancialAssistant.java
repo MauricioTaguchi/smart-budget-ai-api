@@ -35,17 +35,20 @@ public class DemoFinancialAssistant implements FinancialAssistant {
     private final ListTransactionsUseCase listTransactions;
     private final GetFinancialSummaryUseCase getSummary;
     private final AiAuditService auditService;
+    private final AiCommandPolicy commandPolicy;
 
     public DemoFinancialAssistant(
             CreateTransactionUseCase createTransaction,
             ListTransactionsUseCase listTransactions,
             GetFinancialSummaryUseCase getSummary,
-            AiAuditService auditService
+            AiAuditService auditService,
+            AiCommandPolicy commandPolicy
     ) {
         this.createTransaction = createTransaction;
         this.listTransactions = listTransactions;
         this.getSummary = getSummary;
         this.auditService = auditService;
+        this.commandPolicy = commandPolicy;
     }
 
     @Override
@@ -68,9 +71,7 @@ public class DemoFinancialAssistant implements FinancialAssistant {
     }
 
     private String interpret(String originalMessage) {
-        if (originalMessage == null || originalMessage.isBlank()) {
-            throw new IllegalArgumentException("O comando não pode estar vazio.");
-        }
+        commandPolicy.validate(originalMessage);
 
         String message = normalize(originalMessage);
 
@@ -88,6 +89,13 @@ public class DemoFinancialAssistant implements FinancialAssistant {
             BigDecimal amount = extractAmount(originalMessage);
             String category = extractCategory(originalMessage);
             String description = extractDescription(originalMessage, type);
+
+            if (!commandPolicy.isConfirmed(originalMessage)) {
+                String label = type == TransactionType.INCOME ? "receita" : "despesa";
+                return "Confirme antes de salvar: %s de R$ %s na categoria %s. "
+                        .formatted(label, amount.toPlainString(), category)
+                        + "Reenvie o comando incluindo a palavra CONFIRMAR.";
+            }
 
             TransactionView saved = createTransaction.execute(
                     new CreateTransactionCommand(type, amount, description, category)

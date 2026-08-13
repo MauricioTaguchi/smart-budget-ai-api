@@ -45,8 +45,10 @@ public class FinancialTools {
             @ToolParam(description = "Tipo: INCOME ou EXPENSE") String type,
             @ToolParam(description = "Valor positivo da transação") BigDecimal amount,
             @ToolParam(description = "Descrição objetiva da transação") String description,
-            @ToolParam(description = "Categoria financeira") String category
+            @ToolParam(description = "Categoria financeira") String category,
+            @ToolParam(description = "Verdadeiro somente após confirmação explícita do usuário") boolean confirmed
     ) {
+        requireConfirmation(confirmed);
         return createTransaction.execute(new CreateTransactionCommand(
                 TransactionType.from(type),
                 amount,
@@ -67,9 +69,17 @@ public class FinancialTools {
 
     @Tool(description = "Exclui uma transação financeira pelo identificador UUID.")
     public String deleteFinancialTransaction(
-            @ToolParam(description = "UUID da transação") String transactionId
+            @ToolParam(description = "UUID da transação") String transactionId,
+            @ToolParam(description = "Verdadeiro somente após confirmação explícita do usuário") boolean confirmed
     ) {
+        requireConfirmation(confirmed);
         deleteTransaction.execute(UUID.fromString(transactionId));
         return "Transação excluída com sucesso.";
+    }
+
+    private void requireConfirmation(boolean confirmed) {
+        if (!confirmed) {
+            throw new IllegalArgumentException("A operação exige confirmação explícita.");
+        }
     }
 }
