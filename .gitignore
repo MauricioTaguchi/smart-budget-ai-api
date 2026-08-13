@@ -1,4 +1,6 @@
 target/
+target-codex/
+.m2/
 data/
 .idea/
 .vscode/
@@ -7,6 +9,8 @@ data/
 .project
 .settings/
 .env
+.env.local
+.env.*.local
 *.log
 .DS_Store
 resposta.mp3
