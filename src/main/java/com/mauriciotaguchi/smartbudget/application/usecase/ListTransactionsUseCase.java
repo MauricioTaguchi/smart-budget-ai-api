@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
+import java.util.Objects;
 
 @Service
 public class ListTransactionsUseCase {
@@ -17,8 +19,9 @@ public class ListTransactionsUseCase {
     }
 
     @Transactional(readOnly = true)
-    public List<TransactionView> execute() {
-        return repository.findAll().stream()
+    public List<TransactionView> execute(UUID ownerId) {
+        Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
+        return repository.findAllByOwnerId(ownerId).stream()
                 .map(TransactionView::from)
                 .toList();
     }

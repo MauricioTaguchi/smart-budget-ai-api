@@ -6,6 +6,8 @@ import com.mauriciotaguchi.smartbudget.domain.model.FinancialTransaction;
 import com.mauriciotaguchi.smartbudget.domain.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.UUID;
+import java.util.Objects;
 
 @Service
 public class CreateTransactionUseCase {
@@ -17,7 +19,8 @@ public class CreateTransactionUseCase {
     }
 
     @Transactional
-    public TransactionView execute(CreateTransactionCommand command) {
+    public TransactionView execute(UUID ownerId, CreateTransactionCommand command) {
+        Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
         FinancialTransaction transaction = FinancialTransaction.create(
                 command.type(),
                 command.amount(),
@@ -25,6 +28,6 @@ public class CreateTransactionUseCase {
                 command.category()
         );
 
-        return TransactionView.from(repository.save(transaction));
+        return TransactionView.from(repository.save(ownerId, transaction));
     }
 }

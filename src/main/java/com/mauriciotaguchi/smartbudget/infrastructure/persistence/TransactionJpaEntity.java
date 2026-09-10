@@ -20,6 +20,9 @@ public class TransactionJpaEntity {
     @Id
     private UUID id;
 
+    @Column(name = "owner_id")
+    private UUID ownerId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TransactionType type;
@@ -60,8 +63,8 @@ public class TransactionJpaEntity {
         this.createdAt = createdAt;
     }
 
-    public static TransactionJpaEntity fromDomain(FinancialTransaction transaction) {
-        return new TransactionJpaEntity(
+    public static TransactionJpaEntity fromDomain(UUID ownerId, FinancialTransaction transaction) {
+        TransactionJpaEntity entity = new TransactionJpaEntity(
                 transaction.getId(),
                 transaction.getType(),
                 transaction.getAmount(),
@@ -70,6 +73,8 @@ public class TransactionJpaEntity {
                 transaction.getOccurredAt(),
                 transaction.getCreatedAt()
         );
+        entity.ownerId = java.util.Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
+        return entity;
     }
 
     public FinancialTransaction toDomain() {

@@ -16,13 +16,15 @@ services:
   api:
     build: .
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod,openai
+      SERVER_ADDRESS: 0.0.0.0
       DATABASE_URL: jdbc:postgresql://postgres:5432/smartbudget
       DATABASE_USERNAME: smartbudget
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:?configure DATABASE_PASSWORD}
-      APP_API_KEY: ${APP_API_KEY:?configure APP_API_KEY}
+      APP_BOOTSTRAP_ADMIN_TOKEN: ${APP_BOOTSTRAP_ADMIN_TOKEN:-}
+      APP_BOOTSTRAP_ADMIN_USERNAME: ${APP_BOOTSTRAP_ADMIN_USERNAME:-bootstrap-admin}
       OPENAI_API_KEY: ${OPENAI_API_KEY:?configure OPENAI_API_KEY}
     depends_on:
       postgres:

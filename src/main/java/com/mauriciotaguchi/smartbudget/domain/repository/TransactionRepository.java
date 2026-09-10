@@ -8,13 +8,11 @@ import java.util.UUID;
 
 public interface TransactionRepository {
 
-    FinancialTransaction save(FinancialTransaction transaction);
+    FinancialTransaction save(UUID ownerId, FinancialTransaction transaction);
 
-    List<FinancialTransaction> findAll();
+    List<FinancialTransaction> findAllByOwnerId(UUID ownerId);
 
-    Optional<FinancialTransaction> findById(UUID id);
+    Optional<FinancialTransaction> findByIdAndOwnerId(UUID id, UUID ownerId);
 
-    void deleteById(UUID id);
-
-    boolean existsById(UUID id);
+    int deleteByIdAndOwnerId(UUID id, UUID ownerId);
 }

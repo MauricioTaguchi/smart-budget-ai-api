@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.UUID;
+import java.util.Objects;
 
 @Service
 public class AiAuditService {
@@ -28,8 +30,9 @@ public class AiAuditService {
     }
 
     @Transactional
-    public void success(String channel, String input, String response) {
+    public void success(UUID ownerId, String channel, String input, String response) {
         repository.save(new AiInteractionEntity(
+                ownerId,
                 channel,
                 mode,
                 safe(input),
@@ -41,8 +44,9 @@ public class AiAuditService {
     }
 
     @Transactional
-    public void failure(String channel, String input, Exception exception) {
+    public void failure(UUID ownerId, String channel, String input, Exception exception) {
         repository.save(new AiInteractionEntity(
+                ownerId,
                 channel,
                 mode,
                 safe(input),
@@ -54,8 +58,9 @@ public class AiAuditService {
     }
 
     @Transactional(readOnly = true)
-    public List<AiAuditView> list() {
-        return repository.findTop100ByOrderByCreatedAtDesc()
+    public List<AiAuditView> list(UUID ownerId) {
+        Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
+        return repository.findTop100ByOwnerIdOrderByCreatedAtDesc(ownerId)
                 .stream()
                 .map(AiAuditView::from)
                 .toList();

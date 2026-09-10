@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.UUID;
+import java.util.Objects;
 
 @Service
 @Profile("!openai")
@@ -52,35 +54,37 @@ public class DemoFinancialAssistant implements FinancialAssistant {
     }
 
     @Override
-    public AssistantTextResult processText(String message) {
+    public AssistantTextResult processText(UUID ownerId, String message) {
+        Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
         try {
-            String answer = interpret(message);
-            auditService.success("TEXT", message, answer);
+            String answer = interpret(ownerId, message);
+            auditService.success(ownerId, "TEXT", message, answer);
             return new AssistantTextResult(message, answer, "demo");
         } catch (RuntimeException exception) {
-            auditService.failure("TEXT", message, exception);
+            auditService.failure(ownerId, "TEXT", message, exception);
             throw exception;
         }
     }
 
     @Override
-    public AssistantVoiceResult processVoice(Resource audio) {
+    public AssistantVoiceResult processVoice(UUID ownerId, Resource audio) {
+        Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
         throw new AiProviderUnavailableException(
                 "O processamento de áudio exige o perfil openai e a variável OPENAI_API_KEY."
         );
     }
 
-    private String interpret(String originalMessage) {
+    private String interpret(UUID ownerId, String originalMessage) {
         commandPolicy.validate(originalMessage);
 
         String message = normalize(originalMessage);
 
         if (containsAny(message, "saldo", "resumo", "quanto tenho", "quanto gastei")) {
-            return formatSummary(getSummary.execute());
+            return formatSummary(getSummary.execute(ownerId));
         }
 
         if (containsAny(message, "listar", "liste", "extrato", "transacoes", "movimentacoes")) {
-            return formatTransactions(listTransactions.execute());
+            return formatTransactions(listTransactions.execute(ownerId));
         }
 
         TransactionType type = detectType(message);
@@ -97,7 +101,7 @@ public class DemoFinancialAssistant implements FinancialAssistant {
                         + "Reenvie o comando incluindo a palavra CONFIRMAR.";
             }
 
-            TransactionView saved = createTransaction.execute(
+            TransactionView saved = createTransaction.execute(ownerId,
                     new CreateTransactionCommand(type, amount, description, category)
             );
 

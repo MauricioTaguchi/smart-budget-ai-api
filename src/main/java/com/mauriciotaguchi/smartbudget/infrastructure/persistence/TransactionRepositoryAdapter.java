@@ -2,7 +2,6 @@ package com.mauriciotaguchi.smartbudget.infrastructure.persistence;
 
 import com.mauriciotaguchi.smartbudget.domain.model.FinancialTransaction;
 import com.mauriciotaguchi.smartbudget.domain.repository.TransactionRepository;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,30 +18,28 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     }
 
     @Override
-    public FinancialTransaction save(FinancialTransaction transaction) {
-        return repository.save(TransactionJpaEntity.fromDomain(transaction)).toDomain();
+    public FinancialTransaction save(UUID ownerId, FinancialTransaction transaction) {
+        return repository.save(TransactionJpaEntity.fromDomain(ownerId, transaction)).toDomain();
     }
 
     @Override
-    public List<FinancialTransaction> findAll() {
-        return repository.findAll(Sort.by(Sort.Direction.DESC, "occurredAt"))
+    public List<FinancialTransaction> findAllByOwnerId(UUID ownerId) {
+        java.util.Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
+        return repository.findAllByOwnerIdOrderByOccurredAtDesc(ownerId)
                 .stream()
                 .map(TransactionJpaEntity::toDomain)
                 .toList();
     }
 
     @Override
-    public Optional<FinancialTransaction> findById(UUID id) {
-        return repository.findById(id).map(TransactionJpaEntity::toDomain);
+    public Optional<FinancialTransaction> findByIdAndOwnerId(UUID id, UUID ownerId) {
+        java.util.Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
+        return repository.findByIdAndOwnerId(id, ownerId).map(TransactionJpaEntity::toDomain);
     }
 
     @Override
-    public void deleteById(UUID id) {
-        repository.deleteById(id);
-    }
-
-    @Override
-    public boolean existsById(UUID id) {
-        return repository.existsById(id);
+    public int deleteByIdAndOwnerId(UUID id, UUID ownerId) {
+        java.util.Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
+        return repository.deleteOwned(id, ownerId);
     }
 }

@@ -1,26 +1,52 @@
-GET http://localhost:8080/actuator/health
+# REST Client: variáveis vêm do ambiente do processo do editor.
+# Defina SMART_BUDGET_ADMIN_TOKEN e SMART_BUDGET_USER_TOKEN localmente.
+# Após criar um principal, guarde o token retornado em seu cofre e carregue-o
+# em SMART_BUDGET_USER_TOKEN. Nunca grave tokens neste arquivo.
+@baseUrl = http://localhost:8080
 
-###
-POST http://localhost:8080/api/assistant/text
+### Probe público
+GET {{baseUrl}}/actuator/health
+
+### Criar usuário: resposta contém o token somente nesta operação
+POST {{baseUrl}}/api/admin/principals
+Authorization: Bearer {{$processEnv SMART_BUDGET_ADMIN_TOKEN}}
 Content-Type: application/json
 
 {
-  "message": "Registre uma despesa de 89,90 com supermercado na categoria alimentação"
+  "username": "finance-user-01",
+  "role": "USER"
 }
 
-###
-POST http://localhost:8080/api/assistant/text
+### Listar identidades: não retorna tokens ou hashes
+GET {{baseUrl}}/api/admin/principals
+Authorization: Bearer {{$processEnv SMART_BUDGET_ADMIN_TOKEN}}
+
+### Confirmar criação no escopo do usuário autenticado
+POST {{baseUrl}}/api/assistant/text
+Authorization: Bearer {{$processEnv SMART_BUDGET_USER_TOKEN}}
+Content-Type: application/json
+
+{
+  "message": "Confirmar despesa de 89,90 com supermercado na categoria alimentação"
+}
+
+### Consultar o próprio saldo
+POST {{baseUrl}}/api/assistant/text
+Authorization: Bearer {{$processEnv SMART_BUDGET_USER_TOKEN}}
 Content-Type: application/json
 
 {
   "message": "Qual é o meu saldo atual?"
 }
 
-###
-GET http://localhost:8080/api/transactions
+### Somente transações próprias
+GET {{baseUrl}}/api/transactions
+Authorization: Bearer {{$processEnv SMART_BUDGET_USER_TOKEN}}
 
-###
-GET http://localhost:8080/api/transactions/summary
+### Somente resumo próprio
+GET {{baseUrl}}/api/transactions/summary
+Authorization: Bearer {{$processEnv SMART_BUDGET_USER_TOKEN}}
 
-###
-GET http://localhost:8080/api/audits
+### Somente auditorias próprias
+GET {{baseUrl}}/api/audits
+Authorization: Bearer {{$processEnv SMART_BUDGET_USER_TOKEN}}

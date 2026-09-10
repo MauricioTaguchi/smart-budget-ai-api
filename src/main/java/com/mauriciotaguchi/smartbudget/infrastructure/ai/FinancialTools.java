@@ -10,14 +10,14 @@ import com.mauriciotaguchi.smartbudget.application.usecase.ListTransactionsUseCa
 import com.mauriciotaguchi.smartbudget.domain.model.TransactionType;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-@Component
 public class FinancialTools {
+
+    private final UUID ownerId;
 
     private final CreateTransactionUseCase createTransaction;
     private final ListTransactionsUseCase listTransactions;
@@ -25,11 +25,13 @@ public class FinancialTools {
     private final DeleteTransactionUseCase deleteTransaction;
 
     public FinancialTools(
+            UUID ownerId,
             CreateTransactionUseCase createTransaction,
             ListTransactionsUseCase listTransactions,
             GetFinancialSummaryUseCase getSummary,
             DeleteTransactionUseCase deleteTransaction
     ) {
+        this.ownerId = java.util.Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
         this.createTransaction = createTransaction;
         this.listTransactions = listTransactions;
         this.getSummary = getSummary;
@@ -49,7 +51,7 @@ public class FinancialTools {
             @ToolParam(description = "Verdadeiro somente após confirmação explícita do usuário") boolean confirmed
     ) {
         requireConfirmation(confirmed);
-        return createTransaction.execute(new CreateTransactionCommand(
+        return createTransaction.execute(ownerId, new CreateTransactionCommand(
                 TransactionType.from(type),
                 amount,
                 description,
@@ -59,12 +61,12 @@ public class FinancialTools {
 
     @Tool(description = "Consulta o resumo financeiro com receitas, despesas, saldo e quantidade de transações.")
     public FinancialSummary getFinancialSummary() {
-        return getSummary.execute();
+        return getSummary.execute(ownerId);
     }
 
     @Tool(description = "Lista as transações financeiras cadastradas, da mais recente para a mais antiga.")
     public List<TransactionView> listFinancialTransactions() {
-        return listTransactions.execute();
+        return listTransactions.execute(ownerId);
     }
 
     @Tool(description = "Exclui uma transação financeira pelo identificador UUID.")
@@ -73,7 +75,7 @@ public class FinancialTools {
             @ToolParam(description = "Verdadeiro somente após confirmação explícita do usuário") boolean confirmed
     ) {
         requireConfirmation(confirmed);
-        deleteTransaction.execute(UUID.fromString(transactionId));
+        deleteTransaction.execute(ownerId, UUID.fromString(transactionId));
         return "Transação excluída com sucesso.";
     }
 
