@@ -68,4 +68,3 @@ class BootstrapAdministratorTest {
         verify(principals, never()).save(any());
     }
 }
-

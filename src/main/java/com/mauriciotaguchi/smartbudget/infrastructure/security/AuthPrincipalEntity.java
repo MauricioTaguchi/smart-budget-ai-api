@@ -49,4 +49,3 @@ public class AuthPrincipalEntity {
     public String getTokenHash() { return tokenHash; }
     public Instant getCreatedAt() { return createdAt; }
 }
-

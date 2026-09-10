@@ -13,4 +13,3 @@ public record AuthenticatedPrincipal(UUID id, String username, PrincipalRole rol
         return "AuthenticatedPrincipal[id=" + id + ", role=" + role + "]";
     }
 }
-

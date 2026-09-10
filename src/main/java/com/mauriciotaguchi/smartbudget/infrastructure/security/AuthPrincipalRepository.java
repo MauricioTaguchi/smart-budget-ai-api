@@ -15,4 +15,3 @@ public interface AuthPrincipalRepository extends JpaRepository<AuthPrincipalEnti
     @Query(value = "select id from auth_administration_lock where id = 1 for update", nativeQuery = true)
     Integer lockAdministration();
 }
-

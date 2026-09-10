@@ -52,4 +52,3 @@ class H2LegacyMigrationTest {
         }
     }
 }
-

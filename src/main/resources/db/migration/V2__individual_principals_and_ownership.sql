@@ -22,4 +22,3 @@ ALTER TABLE ai_interactions ADD COLUMN owner_id UUID;
 ALTER TABLE ai_interactions ADD CONSTRAINT fk_ai_owner
     FOREIGN KEY (owner_id) REFERENCES auth_principals(id);
 CREATE INDEX ix_ai_owner_created ON ai_interactions(owner_id, created_at);
-

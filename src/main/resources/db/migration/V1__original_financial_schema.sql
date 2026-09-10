@@ -18,4 +18,3 @@ CREATE TABLE ai_interactions (
     error_message VARCHAR(2000),
     created_at TIMESTAMP(6) NOT NULL
 );
-
