@@ -6,6 +6,8 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import java.util.UUID;
+import java.util.Objects;
 
 @Service
 @Profile("openai")
@@ -33,10 +35,11 @@ public class OpenAiFinancialAssistant implements FinancialAssistant {
     private final TextToSpeechModel textToSpeechModel;
     private final AiAuditService auditService;
     private final AiCommandPolicy commandPolicy;
+    private final FinancialToolsFactory financialToolsFactory;
 
     public OpenAiFinancialAssistant(
             ChatClient.Builder chatClientBuilder,
-            FinancialTools financialTools,
+            FinancialToolsFactory financialToolsFactory,
             TranscriptionModel transcriptionModel,
             TextToSpeechModel textToSpeechModel,
             AiAuditService auditService,
@@ -44,8 +47,8 @@ public class OpenAiFinancialAssistant implements FinancialAssistant {
     ) {
         this.chatClient = chatClientBuilder
                 .defaultSystem(SYSTEM_PROMPT)
-                .defaultTools(financialTools)
                 .build();
+        this.financialToolsFactory = financialToolsFactory;
         this.transcriptionModel = transcriptionModel;
         this.textToSpeechModel = textToSpeechModel;
         this.auditService = auditService;
@@ -53,27 +56,29 @@ public class OpenAiFinancialAssistant implements FinancialAssistant {
     }
 
     @Override
-    public AssistantTextResult processText(String message) {
+    public AssistantTextResult processText(UUID ownerId, String message) {
+        Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
         try {
-            String answer = generateAnswer(message);
-            auditService.success("TEXT", message, answer);
+            String answer = generateAnswer(ownerId, message);
+            auditService.success(ownerId, "TEXT", message, answer);
             return new AssistantTextResult(message, answer, "openai");
         } catch (RuntimeException exception) {
-            auditService.failure("TEXT", message, exception);
+            auditService.failure(ownerId, "TEXT", message, exception);
             throw exception;
         }
     }
 
     @Override
-    public AssistantVoiceResult processVoice(Resource audio) {
+    public AssistantVoiceResult processVoice(UUID ownerId, Resource audio) {
+        Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
         String transcript = "";
 
         try {
             transcript = transcriptionModel.transcribe(audio);
-            String answer = generateAnswer(transcript);
+            String answer = generateAnswer(ownerId, transcript);
             byte[] generatedAudio = textToSpeechModel.call(answer);
 
-            auditService.success("VOICE", transcript, answer);
+            auditService.success(ownerId, "VOICE", transcript, answer);
             return new AssistantVoiceResult(
                     transcript,
                     answer,
@@ -81,15 +86,16 @@ public class OpenAiFinancialAssistant implements FinancialAssistant {
                     "openai"
             );
         } catch (RuntimeException exception) {
-            auditService.failure("VOICE", transcript, exception);
+            auditService.failure(ownerId, "VOICE", transcript, exception);
             throw exception;
         }
     }
 
-    private String generateAnswer(String message) {
+    private String generateAnswer(UUID ownerId, String message) {
         commandPolicy.validate(message);
 
         String answer = chatClient.prompt(message)
+                .tools(financialToolsFactory.forOwner(ownerId))
                 .call()
                 .content();
 

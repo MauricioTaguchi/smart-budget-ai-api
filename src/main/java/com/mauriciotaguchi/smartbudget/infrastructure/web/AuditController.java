@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import com.mauriciotaguchi.smartbudget.infrastructure.security.AuthenticatedPrincipal;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api/audits")
@@ -18,7 +20,7 @@ public class AuditController {
     }
 
     @GetMapping
-    public List<AiAuditService.AiAuditView> list() {
-        return auditService.list();
+    public List<AiAuditService.AiAuditView> list(@AuthenticationPrincipal AuthenticatedPrincipal principal) {
+        return auditService.list(principal.id());
     }
 }

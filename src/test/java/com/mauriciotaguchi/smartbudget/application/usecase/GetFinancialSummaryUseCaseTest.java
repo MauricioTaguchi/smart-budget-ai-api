@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GetFinancialSummaryUseCaseTest {
+    private final java.util.UUID ownerId = java.util.UUID.randomUUID();
 
     @Test
     void shouldCalculateIncomeExpenseAndBalance() {
@@ -18,21 +19,21 @@ class GetFinancialSummaryUseCaseTest {
         GetFinancialSummaryUseCase summaryUseCase =
                 new GetFinancialSummaryUseCase(repository);
 
-        create.execute(new CreateTransactionCommand(
+        create.execute(ownerId, new CreateTransactionCommand(
                 TransactionType.INCOME,
                 new BigDecimal("3000.00"),
                 "Salário",
                 "Trabalho"
         ));
 
-        create.execute(new CreateTransactionCommand(
+        create.execute(ownerId, new CreateTransactionCommand(
                 TransactionType.EXPENSE,
                 new BigDecimal("500.00"),
                 "Aluguel",
                 "Moradia"
         ));
 
-        FinancialSummary summary = summaryUseCase.execute();
+        FinancialSummary summary = summaryUseCase.execute(ownerId);
 
         assertEquals(new BigDecimal("3000.00"), summary.totalIncome());
         assertEquals(new BigDecimal("500.00"), summary.totalExpense());

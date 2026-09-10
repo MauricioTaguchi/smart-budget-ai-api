@@ -11,13 +11,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CreateTransactionUseCaseTest {
+    private final java.util.UUID ownerId = java.util.UUID.randomUUID();
 
     @Test
     void shouldCreateAnExpense() {
         InMemoryTransactionRepository repository = new InMemoryTransactionRepository();
         CreateTransactionUseCase useCase = new CreateTransactionUseCase(repository);
 
-        TransactionView result = useCase.execute(new CreateTransactionCommand(
+        TransactionView result = useCase.execute(ownerId, new CreateTransactionCommand(
                 TransactionType.EXPENSE,
                 new BigDecimal("89.90"),
                 "Supermercado",
@@ -26,7 +27,7 @@ class CreateTransactionUseCaseTest {
 
         assertEquals(TransactionType.EXPENSE, result.type());
         assertEquals(new BigDecimal("89.90"), result.amount());
-        assertEquals(1, repository.findAll().size());
+        assertEquals(1, repository.findAllByOwnerId(ownerId).size());
     }
 
     @Test
@@ -35,7 +36,7 @@ class CreateTransactionUseCaseTest {
         CreateTransactionUseCase useCase = new CreateTransactionUseCase(repository);
 
         assertThrows(IllegalArgumentException.class, () ->
-                useCase.execute(new CreateTransactionCommand(
+                useCase.execute(ownerId, new CreateTransactionCommand(
                         TransactionType.EXPENSE,
                         BigDecimal.ZERO,
                         "Compra inválida",

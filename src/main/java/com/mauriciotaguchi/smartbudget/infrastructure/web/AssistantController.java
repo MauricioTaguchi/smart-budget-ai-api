@@ -20,6 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import com.mauriciotaguchi.smartbudget.infrastructure.security.AuthenticatedPrincipal;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api/assistant")
@@ -33,9 +35,10 @@ public class AssistantController {
 
     @PostMapping("/text")
     public AssistantTextResult text(
+            @AuthenticationPrincipal AuthenticatedPrincipal principal,
             @Valid @RequestBody TextCommandRequest request
     ) {
-        return assistant.processText(request.message());
+        return assistant.processText(principal.id(), request.message());
     }
 
     @PostMapping(
@@ -44,6 +47,7 @@ public class AssistantController {
             produces = "audio/mpeg"
     )
     public ResponseEntity<byte[]> voice(
+            @AuthenticationPrincipal AuthenticatedPrincipal principal,
             @RequestPart("audio") MultipartFile audio
     ) throws IOException {
         if (audio.isEmpty()) {
@@ -61,7 +65,7 @@ public class AssistantController {
             }
         };
 
-        AssistantVoiceResult result = assistant.processVoice(resource);
+        AssistantVoiceResult result = assistant.processVoice(principal.id(), resource);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("audio/mpeg"));

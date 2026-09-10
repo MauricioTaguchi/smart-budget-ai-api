@@ -17,6 +17,7 @@ class FinancialToolsTest {
     private final CreateTransactionUseCase create = mock(CreateTransactionUseCase.class);
     private final DeleteTransactionUseCase delete = mock(DeleteTransactionUseCase.class);
     private final FinancialTools tools = new FinancialTools(
+            java.util.UUID.randomUUID(),
             create,
             mock(ListTransactionsUseCase.class),
             mock(GetFinancialSummaryUseCase.class),

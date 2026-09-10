@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart TD
-    Client[Cliente HTTP] --> Request[Request ID + API key no perfil prod]
+    Client[Cliente HTTP] --> Request[Request ID + token individual]
     Request --> Controllers[Controllers REST]
     Controllers --> Assistant[FinancialAssistant]
     Assistant --> Policy[AI Command Policy]
@@ -11,11 +11,11 @@ flowchart TD
     OpenAI --> Tools[FinancialTools]
     Demo --> UseCases[Casos de uso]
     Tools --> UseCases
-    UseCases --> Port[TransactionRepository]
+    UseCases --> Port[TransactionRepository com proprietário]
     Port --> Jpa[Adapter Spring Data JPA]
     Jpa --> H2[(H2 dev/test)]
     Jpa --> Pg[(PostgreSQL prod)]
-    Assistant --> Audit[Auditoria com redação]
+    Assistant --> Audit[Auditoria por proprietário com redação]
 ```
 
 ## Fronteiras
@@ -28,10 +28,12 @@ flowchart TD
 
 - Toda entrada do assistente passa por limite de tamanho e detecção de padrões de prompt injection.
 - Tools que alteram estado recusam chamadas sem confirmação explícita.
-- O perfil de produção exige credencial independente da chave da OpenAI.
+- Todos os perfis exigem token individual, independente da chave da OpenAI; o administrador gerencia credenciais sem ler os dados financeiros de outros principais.
+- Transações, resumos, ferramentas de IA e auditorias usam o proprietário autenticado; registros legados sem proprietário ficam inacessíveis pela API.
+- Migrações Flyway versionam o esquema e Hibernate o valida; bancos existentes exigem inspeção e baseline explícito, sem atribuição automática de dono.
 - Erros inesperados recebem identificador de correlação; detalhes ficam apenas nos logs.
 - Auditorias mascaram e-mail e sequências compatíveis com dados de pagamento.
 
 ## Evolução recomendada para SaaS
 
-OAuth2/JWT, escopo por usuário em todas as entidades, migrações Flyway, idempotência persistente, limites distribuídos e testes de integração com PostgreSQL/Testcontainers.
+Federação de identidade e recuperação de credenciais, idempotência persistente e limites distribuídos. Os controles de identidade e a migração do legado desta etapa estão detalhados em [ITEM1_ACCESS_CONTROL.md](ITEM1_ACCESS_CONTROL.md).

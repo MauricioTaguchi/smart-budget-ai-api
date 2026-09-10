@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
+import com.mauriciotaguchi.smartbudget.infrastructure.security.AuthenticatedPrincipal;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -46,8 +48,9 @@ public class TransactionController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TransactionView create(@Valid @RequestBody CreateTransactionRequest request) {
-        return createTransaction.execute(new CreateTransactionCommand(
+    public TransactionView create(@AuthenticationPrincipal AuthenticatedPrincipal principal,
+                                  @Valid @RequestBody CreateTransactionRequest request) {
+        return createTransaction.execute(principal.id(), new CreateTransactionCommand(
                 TransactionType.from(request.type()),
                 request.amount(),
                 request.description(),
@@ -56,18 +59,18 @@ public class TransactionController {
     }
 
     @GetMapping
-    public List<TransactionView> list() {
-        return listTransactions.execute();
+    public List<TransactionView> list(@AuthenticationPrincipal AuthenticatedPrincipal principal) {
+        return listTransactions.execute(principal.id());
     }
 
     @GetMapping("/summary")
-    public FinancialSummary summary() {
-        return getSummary.execute();
+    public FinancialSummary summary(@AuthenticationPrincipal AuthenticatedPrincipal principal) {
+        return getSummary.execute(principal.id());
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id) {
-        deleteTransaction.execute(id);
+    public void delete(@AuthenticationPrincipal AuthenticatedPrincipal principal, @PathVariable UUID id) {
+        deleteTransaction.execute(principal.id(), id);
     }
 }

@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
+import java.util.Objects;
 
 @Service
 public class GetFinancialSummaryUseCase {
@@ -20,8 +22,9 @@ public class GetFinancialSummaryUseCase {
     }
 
     @Transactional(readOnly = true)
-    public FinancialSummary execute() {
-        List<FinancialTransaction> transactions = repository.findAll();
+    public FinancialSummary execute(UUID ownerId) {
+        Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
+        List<FinancialTransaction> transactions = repository.findAllByOwnerId(ownerId);
 
         BigDecimal income = transactions.stream()
                 .filter(transaction -> transaction.getType() == TransactionType.INCOME)

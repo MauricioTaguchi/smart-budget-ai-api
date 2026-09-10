@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
+import java.util.Objects;
 
 @Entity
 @Table(name = "ai_interactions")
@@ -16,6 +18,9 @@ public class AiInteractionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "owner_id")
+    private UUID ownerId;
 
     @Column(nullable = false, length = 20)
     private String channel;
@@ -42,6 +47,7 @@ public class AiInteractionEntity {
     }
 
     public AiInteractionEntity(
+            UUID ownerId,
             String channel,
             String mode,
             String inputText,
@@ -50,6 +56,7 @@ public class AiInteractionEntity {
             String errorMessage,
             LocalDateTime createdAt
     ) {
+        this.ownerId = Objects.requireNonNull(ownerId, "Proprietário obrigatório.");
         this.channel = channel;
         this.mode = mode;
         this.inputText = inputText;
